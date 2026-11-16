@@ -1,0 +1,49 @@
+name: bellatrix-portal
+
+services:
+  bellatrix-app:
+    image: node:20-alpine
+    container_name: bellatrix-portal-app
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER:-bellatrix_user}:${DB_PASSWORD:-bellatrix_secure_password}@postgres:5432/${DB_NAME:-bellatrix_db}
+    command: sh -c "pnpm start || npm run start"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bellatrix-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: bellatrix-portal-db
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${DB_NAME:-bellatrix_db}
+      POSTGRES_USER: ${DB_USER:-bellatrix_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-bellatrix_secure_password}
+    volumes:
+      - bellatrix_pg_data:/var/lib/postgresql/data
+    networks:
+      - bellatrix-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-bellatrix_user} -d ${DB_NAME:-bellatrix_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  bellatrix-net:
+    driver: bridge
+
+volumes:
+  bellatrix_pg_data:
