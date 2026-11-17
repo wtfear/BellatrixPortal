@@ -3,6 +3,7 @@
   "description": "BellatrixPortal: Enterprise Internal Admin & Client Portal OS by WTFear Agency",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "license": "MIT",
   "author": "refine",
   "scripts": {
